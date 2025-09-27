@@ -1,4 +1,3 @@
-// Update in CardItem.tsx
 import React from "react";
 import { Card, Title, Paragraph } from "react-native-paper";
 import { StyleSheet, Image, TouchableOpacity } from "react-native";

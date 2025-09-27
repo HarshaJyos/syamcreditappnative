@@ -17,7 +17,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const SignUpScreen = ({ navigation }: any) => {
-  const { signUp } = useAuth();
+  const { signUp, googleLogin } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
 
   const formik = useFormik({
@@ -84,7 +84,7 @@ const SignUpScreen = ({ navigation }: any) => {
       {error && <ErrorMessage message={error} />}
       <Button
         mode="contained"
-        onPress={() => formik.handleSubmit}
+        onPress={() => formik.handleSubmit()}
         style={styles.button}
       >
         Sign Up
@@ -97,7 +97,7 @@ const SignUpScreen = ({ navigation }: any) => {
         onPress={async () => {
           try {
             setError(null);
-            await useAuth().googleLogin();
+            await googleLogin();
             navigation.navigate('Survey');
           } catch (err: any) {
             setError(err.message || 'Failed to sign up with Google');

@@ -1,32 +1,32 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../api/api";
-import { ICreditCard } from "../../../shared/types";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../api/api';
+import { ICreditCard } from '../../../shared/types';
 
-export const fetchCards = createAsyncThunk("cards/fetchCards", async () => {
-  const response = await api.get("/cards");
+export const fetchCards = createAsyncThunk('cards/fetchCards', async () => {
+  const response = await api.get('/cards');
   return response.data;
 });
 
 export const fetchCard = createAsyncThunk(
-  "cards/fetchCard",
+  'cards/fetchCard',
   async (cardId: string) => {
     const response = await api.get(`/cards/${cardId}`);
     return response.data;
-  }
+  },
 );
 
 export const compareCards = createAsyncThunk(
-  "cards/compareCards",
+  'cards/compareCards',
   async ({ card1, card2 }: { card1: string; card2: string }) => {
     const response = await api.get(
-      `/cards/compare?card1=${card1}&card2=${card2}`
+      `/cards/compare?card1=${card1}&card2=${card2}`,
     );
     return response.data;
-  }
+  },
 );
 
 const cardSlice = createSlice({
-  name: "cards",
+  name: 'cards',
   initialState: {
     cards: [] as ICreditCard[],
     card: null as ICreditCard | null,
@@ -35,9 +35,9 @@ const cardSlice = createSlice({
     error: null as string | null,
   },
   reducers: {},
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
-      .addCase(fetchCards.pending, (state) => {
+      .addCase(fetchCards.pending, state => {
         state.loading = true;
       })
       .addCase(fetchCards.fulfilled, (state, action) => {
@@ -46,9 +46,9 @@ const cardSlice = createSlice({
       })
       .addCase(fetchCards.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch cards";
+        state.error = action.error.message || 'Failed to fetch cards';
       })
-      .addCase(fetchCard.pending, (state) => {
+      .addCase(fetchCard.pending, state => {
         state.loading = true;
       })
       .addCase(fetchCard.fulfilled, (state, action) => {
@@ -57,9 +57,9 @@ const cardSlice = createSlice({
       })
       .addCase(fetchCard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch card";
+        state.error = action.error.message || 'Failed to fetch card';
       })
-      .addCase(compareCards.pending, (state) => {
+      .addCase(compareCards.pending, state => {
         state.loading = true;
       })
       .addCase(compareCards.fulfilled, (state, action) => {
@@ -68,7 +68,7 @@ const cardSlice = createSlice({
       })
       .addCase(compareCards.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to compare cards";
+        state.error = action.error.message || 'Failed to compare cards';
       });
   },
 });

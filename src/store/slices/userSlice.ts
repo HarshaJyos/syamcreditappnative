@@ -1,36 +1,34 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../api/api";
-import { ICustomer, ISurvey } from "../../../shared/types";
-
-// Removed unused fetchUser
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../api/api';
+import { ICustomer, ISurvey } from '../../../shared/types';
 
 export const updateUser = createAsyncThunk(
-  "user/updateUser",
+  'user/updateUser',
   async ({ userId, data }: { userId: string; data: Partial<ICustomer> }) => {
     const response = await api.put(`/users/${userId}`, data);
     return response.data;
-  }
+  },
 );
 
 export const submitSurvey = createAsyncThunk(
-  "user/submitSurvey",
+  'user/submitSurvey',
   async ({ userId, survey }: { userId: string; survey: ISurvey }) => {
     const response = await api.put(`/users/${userId}`, { survey });
     return response.data;
-  }
+  },
 );
 
 const userSlice = createSlice({
-  name: "user",
+  name: 'user',
   initialState: {
     user: null as ICustomer | null,
     loading: false,
     error: null as string | null,
   },
   reducers: {},
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
-      .addCase(updateUser.pending, (state) => {
+      .addCase(updateUser.pending, state => {
         state.loading = true;
       })
       .addCase(updateUser.fulfilled, (state, action) => {
@@ -39,9 +37,9 @@ const userSlice = createSlice({
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to update user";
+        state.error = action.error.message || 'Failed to update user';
       })
-      .addCase(submitSurvey.pending, (state) => {
+      .addCase(submitSurvey.pending, state => {
         state.loading = true;
       })
       .addCase(submitSurvey.fulfilled, (state, action) => {
@@ -50,7 +48,7 @@ const userSlice = createSlice({
       })
       .addCase(submitSurvey.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to submit survey";
+        state.error = action.error.message || 'Failed to submit survey';
       });
   },
 });

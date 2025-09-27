@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import auth from "@react-native-firebase/auth";
-import { GoogleSignin, User } from "@react-native-google-signin/google-signin";
-import * as SecureStore from "expo-secure-store";
-import api from "../api/api";
-import { ICustomer } from "../../shared/types";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import auth from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import EncryptedStorage from 'react-native-encrypted-storage'; // Use default import
+import api from '../api/api';
+import { ICustomer } from '../../shared/types';
 
 interface AuthContextType {
   user: ICustomer | null;
@@ -12,7 +12,7 @@ interface AuthContextType {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
   ) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   googleLogin: () => Promise<void>;
@@ -21,7 +21,7 @@ interface AuthContextType {
   error: string | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>({
+const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: false,
   error: null,
@@ -35,7 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>({
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context)
-    throw new Error("useAuth must be used within AuthContextProvider");
+    throw new Error('useAuth must be used within AuthContextProvider');
   return context;
 };
 
@@ -44,36 +44,36 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [error, setError] = React.useState<string | null>(null);
   const [user, setUserState] = useState<ICustomer | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Set user state with ICustomer or null
   const setUser = (user: ICustomer | null) => {
     setUserState(user);
   };
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Configure Google Sign-In
     GoogleSignin.configure({
       webClientId:
-        "599757311255-uct94hit35oh1qdeua3q6eblecodeog5.apps.googleusercontent.com",
+        '599757311255-uct94hit35oh1qdeua3q6eblecodeog5.apps.googleusercontent.com',
     });
 
-    const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribe = auth().onAuthStateChanged(async firebaseUser => {
       try {
         if (firebaseUser) {
           const token = await firebaseUser.getIdToken();
-          await SecureStore.setItemAsync("authToken", token);
+          await EncryptedStorage.setItem('authToken', token);
           // Sync with backend
-          const response = await api.post("/auth/sync", {
+          const response = await api.post('/auth/sync', {
             firebaseUid: firebaseUser.uid,
           });
           setUser(response.data);
         } else {
           setUser(null);
-          await SecureStore.deleteItemAsync("authToken");
+          await EncryptedStorage.removeItem('authToken');
         }
       } catch (error: any) {
-        console.error("Auth state error:", error.message);
+        console.error('Auth state error:', error.message);
       } finally {
         setLoading(false);
       }
@@ -85,14 +85,14 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
   ) => {
     try {
       const credential = await auth().createUserWithEmailAndPassword(
         email,
-        password
+        password,
       );
-      const response = await api.post("/auth/register", {
+      const response = await api.post('/auth/register', {
         firebaseUid: credential.user.uid,
         email,
         firstName,
@@ -100,7 +100,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
       });
       setUser(response.data);
     } catch (error: any) {
-      throw new Error(error.message || "Sign-up failed");
+      throw new Error(error.message || 'Sign-up failed');
     }
   };
 
@@ -108,14 +108,14 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const credential = await auth().signInWithEmailAndPassword(
         email,
-        password
+        password,
       );
-      const response = await api.post("/auth/sync", {
+      const response = await api.post('/auth/sync', {
         firebaseUid: credential.user.uid,
       });
       setUser(response.data);
     } catch (error: any) {
-      throw new Error(error.message || "Login failed");
+      throw new Error(error.message || 'Login failed');
     }
   };
 
@@ -124,43 +124,41 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       console.log(
-        "Google Sign-In response:",
-        JSON.stringify(userInfo, null, 2)
+        'Google Sign-In response:',
+        JSON.stringify(userInfo, null, 2),
       );
-      const idToken =
-        (userInfo as any).idToken ||
-        (userInfo as any).data?.idToken ||
-        (userInfo as any).user?.idToken; // Get idToken from userInfo.user.idToken
+      const idToken = userInfo.data?.idToken; // Updated to access idToken correctly
       if (!idToken) {
-        throw new Error("No ID token received from Google Sign-In");
+        throw new Error('No ID token received from Google Sign-In');
       }
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       const credential = await auth().signInWithCredential(googleCredential);
       const { uid, email, displayName } = credential.user;
       const [firstName, ...lastNameParts] = (
-        displayName || email!.split("@")[0]
-      ).split(" ");
-      const response = await api.post("/auth/sync", { firebaseUid: uid });
+        displayName || email!.split('@')[0]
+      ).split(' ');
+      const response = await api.post('/auth/sync', { firebaseUid: uid });
       setUser({
         firebaseUid: uid,
         email: email!,
         firstName,
-        lastName: lastNameParts.join(" ") || "User",
+        lastName: lastNameParts.join(' ') || 'User',
         ...response.data,
       } as ICustomer);
     } catch (error: any) {
-      console.error("Google Sign-In error:", error.message);
-      throw new Error(error.message || "Google Sign-In failed");
+      console.error('Google Sign-In error:', error.message);
+      throw new Error(error.message || 'Google Sign-In failed');
     }
   };
+
   const logout = async () => {
     try {
       await auth().signOut();
-      await SecureStore.deleteItemAsync("authToken");
+      await EncryptedStorage.removeItem('authToken');
       setUser(null);
     } catch (error: any) {
-      console.error("Logout error:", error.message);
-      throw new Error(error.message || "Logout failed");
+      console.error('Logout error:', error.message);
+      throw new Error(error.message || 'Logout failed');
     }
   };
 

@@ -1,51 +1,48 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Button, TextInput } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
-import { updateUser } from "../store/slices/userSlice";
-import { useAuth } from "../context/AuthContext";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import ErrorMessage from "../components/ErrorMessage";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { AppDispatch, RootState } from "../store";
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Button, TextInput } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUser } from '../store/slices/userSlice';
+import { useAuth } from '../context/AuthContext';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { AppDispatch, RootState } from '../store';
 
 const validationSchema = Yup.object().shape({
-  firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().required("Last name is required"),
+  firstName: Yup.string().required('First name is required'),
+  lastName: Yup.string().required('Last name is required'),
 });
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { logout, user: contextUser, setUser } = useAuth(); // Fixed: Use context, add setUser (expose it in context if not)
-  const { loading, error } = useSelector(
-    // Keep slice for loading/error
-    (state: RootState) => state.user
-  );
+  const { logout, user: contextUser, setUser } = useAuth();
+  const { loading, error } = useSelector((state: RootState) => state.user);
   const [updateError, setUpdateError] = React.useState<string | null>(null);
 
   const formik = useFormik({
     initialValues: {
-      firstName: contextUser?.firstName || "",
-      lastName: contextUser?.lastName || "",
+      firstName: contextUser?.firstName || '',
+      lastName: contextUser?.lastName || '',
     },
     validationSchema,
     enableReinitialize: true,
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         setUpdateError(null);
         if (contextUser && contextUser._id) {
           const resultAction = await dispatch(
-            updateUser({ userId: contextUser._id.toString(), data: values })
+            updateUser({ userId: contextUser._id.toString(), data: values }),
           );
           if (updateUser.fulfilled.match(resultAction)) {
             setUser(resultAction.payload); // Sync back to context
           }
         } else {
-          setUpdateError("User ID is missing");
+          setUpdateError('User ID is missing');
         }
       } catch (err: any) {
-        setUpdateError(err.message || "Failed to update profile");
+        setUpdateError(err.message || 'Failed to update profile');
       }
     },
   });
@@ -61,14 +58,14 @@ const ProfileScreen = () => {
       <TextInput
         label="First Name"
         value={formik.values.firstName}
-        onChangeText={formik.handleChange("firstName")}
+        onChangeText={formik.handleChange('firstName')}
         error={!!formik.errors.firstName}
         style={styles.input}
         theme={{
           colors: {
-            text: "#FFFFFF",
-            placeholder: "#AAAAAA",
-            background: "#1C1C1C",
+            text: '#FFFFFF',
+            placeholder: '#AAAAAA',
+            background: '#1C1C1C',
           },
         }}
       />
@@ -78,14 +75,14 @@ const ProfileScreen = () => {
       <TextInput
         label="Last Name"
         value={formik.values.lastName}
-        onChangeText={formik.handleChange("lastName")}
+        onChangeText={formik.handleChange('lastName')}
         error={!!formik.errors.lastName}
         style={styles.input}
         theme={{
           colors: {
-            text: "#FFFFFF",
-            placeholder: "#AAAAAA",
-            background: "#1C1C1C",
+            text: '#FFFFFF',
+            placeholder: '#AAAAAA',
+            background: '#1C1C1C',
           },
         }}
       />
@@ -106,7 +103,7 @@ const ProfileScreen = () => {
           try {
             await logout();
           } catch (err: any) {
-            setUpdateError(err.message || "Failed to logout");
+            setUpdateError(err.message || 'Failed to logout');
           }
         }}
         style={styles.logoutButton}
@@ -118,17 +115,17 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000000", padding: 20 },
+  container: { flex: 1, backgroundColor: '#000000', padding: 20 },
   title: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 24,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
-  info: { color: "#FFFFFF", fontSize: 16, marginBottom: 20 },
-  input: { marginBottom: 10, backgroundColor: "#1C1C1C" },
-  button: { backgroundColor: "#00FF00", marginTop: 20, marginBottom: 10 },
-  logoutButton: { backgroundColor: "#FF0000" },
+  info: { color: '#FFFFFF', fontSize: 16, marginBottom: 20 },
+  input: { marginBottom: 10, backgroundColor: '#1C1C1C' },
+  button: { backgroundColor: '#00FF00', marginTop: 20, marginBottom: 10 },
+  logoutButton: { backgroundColor: '#FF0000' },
 });
 
 export default ProfileScreen;
