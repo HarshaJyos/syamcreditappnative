@@ -39,13 +39,20 @@ async function requestUserPermission() {
 }
 
 // ✅ Handle foreground messages
+// In App.tsx, inside useFirebaseNotifications
 function useFirebaseNotifications() {
   React.useEffect(() => {
-    requestUserPermission();
+    console.log('Requesting push notification permission...');
+    requestUserPermission()
+      .then(() => {
+        console.log('Notification permission setup complete');
+      })
+      .catch(err => {
+        console.error('Notification permission error:', err);
+      });
 
     const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
-      console.log('Foreground message:', remoteMessage);
-      // You can use a local notification library here (e.g. react-native-push-notification)
+      console.log('Foreground message received:', remoteMessage);
     });
 
     return unsubscribeOnMessage;

@@ -45,40 +45,55 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = React.useState<string | null>(null);
   const [user, setUserState] = useState<ICustomer | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Set user state with ICustomer or null
   const setUser = (user: ICustomer | null) => {
     setUserState(user);
   };
 
   useEffect(() => {
-    // Configure Google Sign-In
+    console.log('AuthContext: Initializing GoogleSignin and Firebase...');
     GoogleSignin.configure({
       webClientId:
         '599757311255-uct94hit35oh1qdeua3q6eblecodeog5.apps.googleusercontent.com',
     });
 
     const unsubscribe = auth().onAuthStateChanged(async firebaseUser => {
+      console.log('AuthContext: onAuthStateChanged fired', {
+        firebaseUser: firebaseUser ? firebaseUser.uid : null,
+      });
       try {
         if (firebaseUser) {
           const token = await firebaseUser.getIdToken();
+          console.log(
+            'AuthContext: Got Firebase token',
+            token.substring(0, 20) + '...',
+          );
           await EncryptedStorage.setItem('authToken', token);
-          // Sync with backend
           const response = await api.post('/auth/sync', {
             firebaseUid: firebaseUser.uid,
           });
-          setUser(response.data);
+          console.log('AuthContext: User synced with backend', response.data);
+          setUserState(response.data);
         } else {
-          setUser(null);
+          console.log('AuthContext: No Firebase user, clearing token');
+          setUserState(null);
           await EncryptedStorage.removeItem('authToken');
         }
-      } catch (error: any) {
-        console.error('Auth state error:', error.message);
+      } catch (err: any) {
+        console.error('AuthContext: Error in onAuthStateChanged', err);
+        setError(err.message || 'Auth initialization failed');
       } finally {
         setLoading(false);
+        console.log(
+          'AuthContext: Loading complete, user:',
+          user ? user.email : 'null',
+        );
       }
     });
-    return unsubscribe;
+
+    return () => {
+      console.log('AuthContext: Unsubscribing from auth state changes');
+      unsubscribe();
+    };
   }, []);
 
   const signUp = async (
